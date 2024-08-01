@@ -5,7 +5,9 @@ I use this documentation for setting up the nginx webserver
 
 https://docs.nginx.com/nginx/admin-guide/installing-nginx/installing-nginx-open-source/
 
-After downloading the nginx sever we will configure nodejs application on that server
+After downloading the nginx sever we will configure nodejs application on that server. this steps I follow.
+
+https://blog.nonstopio.com/deploying-a-node-js-app-using-ansible-cfe7dfeddcac
 
 first will install the nodejs and then we will install the packages.
 
