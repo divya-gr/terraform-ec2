@@ -17,8 +17,6 @@ Then I copy all the files in that nginx server that is required for running the 
 then we will run npm start
 
 
+After that I hit with public ip and port 80 for nginx.
 
-
-
-
-After that I hit with public ip and port 80 for nginx
+Then I install the ansible in the server and created the playbook for nodejs application and deploy the nodejs application on the same nginx webserver.
