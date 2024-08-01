@@ -1,0 +1,87 @@
+---
+- name: Deploy Node.js application with Nginx
+  hosts: localhost
+  become: yes
+  vars:
+    app_name: "mynodeapp"
+    app_port: 3000
+ 
+  tasks:
+    - name: Update and upgrade yum packages
+      yum:
+        update_cache: yes
+        upgrade: yes
+ 
+    - name: Install Node.js and npm
+      yum:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - nodejs
+        - npm
+ 
+    - name: Install pm2 globally
+      npm:
+        name: pm2
+        global: yes
+ 
+    - name: Create application directory
+      file:
+        path: "/home/ec2-user/{{ app_name }}"
+        state: directory
+ 
+    - name: Copy application files
+      copy:
+        src: index.js
+        dest: "/home/ec2-user/{{ app_name }}/index.js"
+ 
+    - name: Install application dependencies
+      npm:
+        path: "/home/ec2-user/{{ app_name }}"
+        state: present
+ 
+    - name: Start the Node.js application with pm2
+      command: pm2 start /home/ec2-user/{{ app_name }}/index.js
+ 
+    - name: Save pm2 process list
+      command: pm2 save
+ 
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+    
+ 
+    - name: Create Nginx configuration for the Node.js application
+  copy:
+    dest: /etc/nginx/conf.d/{{ app_name }}.conf
+    content: |
+      server {
+          listen 80;
+          server_name _;
+
+          location / {
+              proxy_pass http://localhost:{{ app_port }};
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection 'upgrade';
+              proxy_set_header Host $host;
+              proxy_cache_bypass $http_upgrade;
+          }
+      }
+
+- name: Test Nginx configuration
+  command: nginx -t
+  register: nginx_test
+  failed_when: nginx_test.rc != 0
+
+- name: Debug Nginx configuration
+  debug:
+    msg: "{{ nginx_test.stdout }}"
+
+- name: Restart Nginx
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+  when: nginx_test.rc == 0
